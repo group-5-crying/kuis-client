@@ -8,7 +8,7 @@
               <img class="logo" src="../assets/newlogo.png" alt="logo">
               <h1 class="welcome-title">Selamat Datang !</h1>
               <form @submit.prevent="login">
-                <input type="text" placeholder="username">
+                <input v-model="username" type="text" placeholder="username">
               </form>
             </div>
           </div>
@@ -23,6 +23,14 @@ export default {
   name: 'Home',
   data () {
     return {
+      username: ''
+    }
+  },
+  methods: {
+    login () {
+      localStorage.setItem('user', this.username)
+      this.$socket.emit('login', this.username)
+      this.$router.push('/rooms')
     }
   }
 }

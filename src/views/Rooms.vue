@@ -13,11 +13,13 @@
             <div class="align-self-center">
               <h1>Players</h1>
               <div class="player-container scrollable d-flex flex-wrap">
+                <div v-for="(user, i) in users" :key="i" class="card player-card">
                 <div class="card player-card">
                   <div class="card-body d-flex flex-column justify-content-center">
                     <div class="align-self-center">
-                      <h5 class="username-card"> User </h5>
+                      <h5 class="username-card">{{ user }}</h5>
                     </div>
+                  </div>
                   </div>
                 </div>
               </div>
@@ -36,6 +38,11 @@ export default {
   name: 'Rooms',
   data () {
     return {
+    }
+  },
+  computed: {
+    users () {
+      return this.$store.state.users
     }
   }
 }

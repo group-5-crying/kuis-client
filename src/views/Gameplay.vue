@@ -218,4 +218,3 @@ export default {
   border-radius: 10px !important;
 }
 </style>
-

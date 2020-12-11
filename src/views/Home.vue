@@ -5,7 +5,7 @@
         <div class="card welcome-card">
           <div class="card-body d-flex flex-column justify-content-center">
             <div class="align-self-center">
-              <img class="logo" src="../assets/newlogo.png" alt="logo">
+              <img class="logo" src="../assets/neuestlogo.png" alt="logo">
               <h1 class="welcome-title">Selamat Datang !</h1>
               <form @submit.prevent="login">
                 <input v-model="username" type="text" placeholder="username">

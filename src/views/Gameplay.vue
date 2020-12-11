@@ -5,54 +5,52 @@
         <div class="col-7 d-flex flex-column justify-content-center gameboard-side">
           <div class="card shadow gameboard">
             <div class="card-body">
-              <!-- Trigger Play Button -->
-              <div id="btn-trigger-play">
-                <button type="button" class="btn btn-info" @click="setTimer">Play</button>
-                <hr>
-              </div>
+              <!-- Timer -->
               <div class="card shadow timer">
                 <div class="card-body">
                   <div>
-                    Timer:
+                    Waktu:
                   </div>
-                  <div>
-                    10
+                  <div class="time">
+                    {{time}}
                   </div>
                 </div>
               </div>
               <div class="gameboard-main">
+                  <!-- Trigger Play Button -->
+                <div v-if="!canPlay" id="btn-trigger-play">
+                  <button @click.prevent="gameStart" type="button" class="btn btn-dark">Play</button>
+                </div>
                 <!-- Question -->
                 <div id="question">
-                  <p>Question:</p>
-                  <h3>pertanyaanya</h3>
+                  <h3>{{ question }}</h3>
                   <hr>
                 </div>
                 <!-- Answer list -->
-                <div class="" id="answer">
-                  <table class="table table-bordered" style="margin: auto; width: 50%;">
-                    <col style="width: 8em;" />
-                    <col style="width: 1em;" />
-                    <thead>
-                      <tr>
-                        <th colspan="2">Answers</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>jawaban</td>
-                        <td>poin</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  <hr>
+                <div v-if="question" class="answer-part">
+                  <h3>Answers</h3>
+                  <div class="answer-content d-flex flex-column justify-content-center flex-wrapper">
+                    <div class="align-self-center">
+                      <Answer
+                      v-for="answer in answers"
+                      :key="answer.id"
+                      :answer="answer"
+                      ></Answer>
+                    </div>
+                  </div>
                 </div>
               </div>
               <!-- Answer Input -->
-              <div class="input-group mb-3">
-                <input>
-                <div class="input-group-append">
-                  <button class="btn btn-outline-secondary" type="button" id="button-addon2">Submit</button>
-                </div>
+              <div>
+                <form @submit.prevent="inputAnswer">
+                  <input
+                  @submit="inputAnswer"
+                  v-model="inputanswer"
+                  type="text" class="form-control w-100"
+                  placeholder="Your answer..."
+                  aria-label="Recipient's username"
+                  aria-describedby="button-addon2">
+                </form>
               </div>
             </div>
           </div>
@@ -64,41 +62,16 @@
                 <div class="scoreboard">
                   <div class="card scoreboard-card">
                     <div class="card-body">
-                      <h3>Scoreboard</h3>
+                      <h3>Score</h3>
                       <div class="scoreboard-table">
                         <table class="table table-bordered" style="font-size: 0.8em;">
                           <col style="width: 9em;" />
                           <col style="width: 1em;" />
-                          <tr>
+                          <tr v-for="(user, i) in usersPlaying" :key="i">
                             <td class="align-middle text-left">
-                              <span class="username-scoreboard"> avatar</span>
-                              <span class="username-scoreboard"> username</span>
+                              <span class="username-scoreboard"> {{ user.username }}</span>
                             </td>
-                            <td class="align-middle">skor</td>
-                          </tr>
-                          <tr>
-                            <td>Halo</td>
-                            <td>0</td>
-                          </tr>
-                          <tr>
-                            <td>Halo</td>
-                            <td>0</td>
-                          </tr>
-                          <tr>
-                            <td>Halo</td>
-                            <td>0</td>
-                          </tr>
-                          <tr>
-                            <td>Halo</td>
-                            <td>0</td>
-                          </tr>
-                          <tr>
-                            <td>Halo</td>
-                            <td>0</td>
-                          </tr>
-                          <tr>
-                            <td>Halo</td>
-                            <td>0</td>
+                            <td class="align-middle">{{ user.score }}</td>
                           </tr>
                         </table>
                       </div>
@@ -106,8 +79,13 @@
                   </div>
                 </div>
               </div>
-              <!-- chat board bisa nih di tambahin disini -->
-              <div></div>
+              <!-- chat board -->
+              <div class="border p-2 text-left" id="message-board" style="overflow: auto;  height: 30vh;">
+                <div v-for="(message, i) in messages" :key="i">
+                    <span class="username-scoreboard"> {{ user.username }}</span>
+                  <span> {{ user.username }}: {{message.answer}}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -117,58 +95,127 @@
 </template>
 
 <script>
+import Answer from '../components/Answer.vue'
+
 export default {
-  components: {
-  },
   name: 'Gameplay',
+  components: {
+    Answer
+  },
   data () {
-    return {}
+    return {
+      inputanswer: ''
+    }
+  },
+  methods: {
+    gameStart () {
+      if (!this.canPlay) {
+        this.$socket.emit('fetchQuestion')
+        this.timer()
+      } else {
+        this.$router.push('/rooms')
+      }
+    },
+    inputAnswer () {
+      const user = localStorage.getItem('user')
+      const answer = this.inputanswer
+      const data = {
+        user, answer
+      }
+      this.$socket.emit('compareAnswer', data)
+      this.inputanswer = ''
+    },
+    timer () {
+      const gameTime = setInterval(() => {
+        if (!this.question) {
+          clearInterval(gameTime)
+          this.$socket.emit('resetTimer')
+          this.$socket.emit('finish')
+        } else if (this.time <= 0) {
+          clearInterval(gameTime)
+          this.$socket.emit('resetTimer')
+          this.getQuestion()
+        } else {
+          this.$socket.emit('timer')
+        }
+      }, 1000)
+    },
+    getQuestion () {
+      this.$socket.emit('getQuestion')
+      this.timer()
+    }
+  },
+  computed: {
+    usersPlaying () {
+      return this.$store.state.scores
+    },
+    question () {
+      return this.$store.state.questions
+    },
+    messages () {
+      return this.$store.state.messages
+    },
+    user () {
+      return this.$store.state.user
+    },
+    answered () {
+      return this.$store.state.answered
+    },
+    answers () {
+      return this.$store.state.answers
+    },
+    time () {
+      return this.$store.state.time
+    },
+    canPlay () {
+      return this.$store.state.isPlay
+    }
   }
 }
-
 </script>
 
 <style>
-  .gameboard-side {
-    min-height: 100vh;
-  }
 
-  .gameboard {
-    border-radius: 20px !important;
-    min-height: 80vh;
-  }
+.gameboard-side {
+  min-height: 100vh;
+}
 
-  .gameboard-main {
-    height: 50vh;
-  }
+.gameboard {
+  border-radius: 20px !important;
+  min-height: 80vh;
+}
 
-  .timer {
-    width: 8vw;
-    border-radius: 10px !important;
-  }
+.gameboard-main {
+  height: 50vh;
+}
 
-  .scoreboard-card {
-    border-radius: 10px !important;
-    height: 40vh;
-  }
+.timer {
+  width: 8vw;
+  border-radius: 10px !important;
+}
 
-  .scoreboard-table {
-    height: 30vh;
-    overflow-y: auto;
-  }
+.scoreboard-card {
+  border-radius: 10px !important;
+  height: 40vh;
+}
 
-  .user-avatar-scoreboard {
-    width: 2vw;
-  }
+.scoreboard-table {
+  height: 30vh;
+  overflow-y: auto;
+}
 
-  .username-scoreboard {
-    font-size: 1rem;
-    margin-left: 8px;
-  }
+.user-avatar-scoreboard {
+  width: 2vw;
+}
 
-  #message-board {
-    margin-top: 16px;
-    border-radius: 10px !important;
-  }
+.username-scoreboard {
+  font-size: 1rem;
+  margin-left: 8px;
+}
 
+#message-board {
+  margin-top: 16px;
+  border-radius: 10px !important;
+}
 </style>
+

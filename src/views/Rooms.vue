@@ -7,42 +7,20 @@
           <h1 class="text-muted waiting-room-title">Waiting Room...</h1>
         </div>
       </div>
-      <div class="col-7 d-flex flex-column justify-content-center">
-        <div class="card rooms-card">
-          <div class="card-body d-flex flex-column justify-content-center">
-            <div class="align-self-center">
-              <h1>Players</h1>
-              <div class="player-container scrollable d-flex flex-wrap">
-                <div v-for="(user, i) in users" :key="i" class="card player-card">
-                <div class="card player-card">
-                  <div class="card-body d-flex flex-column justify-content-center">
-                    <div class="align-self-center">
-                      <h5 class="username-card">{{ user }}</h5>
-                    </div>
-                  </div>
-                  </div>
-                </div>
-              </div>
-              <button class="play-btn">Play</button>
-              <h5 class="waiting-info text-muted">Current game is running, please wait</h5>
-            </div>
-          </div>
-        </div>
-      </div>
+      <PlayerList></PlayerList>
     </div>
   </div>
 </template>
 
 <script>
+import PlayerList from '../components/PlayerList.vue'
 export default {
+  components: {
+    PlayerList
+  },
   name: 'Rooms',
   data () {
     return {
-    }
-  },
-  computed: {
-    users () {
-      return this.$store.state.users
     }
   }
 }
